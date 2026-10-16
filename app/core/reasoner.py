@@ -379,7 +379,7 @@ class SplitReasoner:
         retention_total = 0.0
         items = []
 
-        monetary_pattern = re.compile(r"(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2}))")
+        monetary_pattern = re.compile(r"(\d+(?:[.,]\d{3})*(?:[.,]\d{2}))")
 
         for line in lines:
             lower = line.lower()
@@ -399,7 +399,7 @@ class SplitReasoner:
                     tax_total = amounts[-1]
                 elif any(k in lower for k in ["retención", "retencion", "irpf"]) and amounts:
                     retention_total = amounts[-1]
-            elif amounts and ("|" in line or " x " in line or len(amounts) >= 2 or "partida" in lower or "servicio" in lower):
+            elif amounts and ("|" in line or " x " in line or len(amounts) >= 2 or "partida" in lower or "servicio" in lower or "amazon" in lower or "cloud" in lower):
                 # Detectar tipo de IVA específico en la línea si existe
                 rate_match = re.search(r"iva\s*[:\s]?\s*(\d{1,2}(?:\.\d+)?)%", line, re.I)
                 tax_rate = float(rate_match.group(1)) if rate_match else 21.0
@@ -418,7 +418,13 @@ class SplitReasoner:
                     b_amt = amounts[0]
 
                 t_amt = round(b_amt * (tax_rate / 100.0), 2)
-                concept = re.sub(r"[\d.,€$£]", "", line).split("|")[0].strip() or "Partida de Servicio"
+                # Extraer concepto preservando nombres y modelos como EC2, S3, etc.
+                raw_concept = line.split("|")[0].strip()
+                m_concept = re.match(r"^(.*?)(?:\s{2,}|\t|\s+(?=\d+\s+))\d+.*$", raw_concept)
+                if m_concept and len(m_concept.group(1).strip()) > 3:
+                    concept = m_concept.group(1).strip()
+                else:
+                    concept = re.sub(r"\s+[\d.,€$£]+(?:\s+[\d.,€$£]+)*\s*$", "", raw_concept).strip() or "Partida de Servicio"
 
                 items.append({
                     "concept": concept,
