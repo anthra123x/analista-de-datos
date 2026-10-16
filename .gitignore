@@ -1,0 +1,34 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# Environment and secrets
+.env
+.env.local
+
+# Databases and data outputs
+data/*.sqlite
+data/*.sqlite-journal
+data/jobs.sqlite
+data/training_dataset.jsonl
+data/test_dataset.jsonl
+
+# IDE and OS
+.vscode/
+.idea/
+.DS_Store
+
+# Coverage and caches
+.pytest_cache/
+.coverage
+htmlcov/
