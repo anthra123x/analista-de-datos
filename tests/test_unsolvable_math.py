@@ -21,7 +21,7 @@ console = Console()
 
 
 def test_overconstrained_unsolvable_system():
-    console.print("\n[bold yellow]🧪 PRUEBA 1: SISTEMA SOBREDETERMINADO INCOMPATIBLE (CONTRADICCIÓN IRRESOLUBLE)[/bold yellow]")
+    console.print("\n[bold yellow][TEST] PRUEBA 1: SISTEMA SOBREDETERMINADO INCOMPATIBLE (CONTRADICCIÓN IRRESOLUBLE)[/bold yellow]")
     
     # Restricciones numéricas imposibles de cumplir simultáneamente:
     # Partidas: 2 items de 500€ = 1000€
@@ -47,7 +47,7 @@ def test_overconstrained_unsolvable_system():
     console.print(f" • Diagnóstico Forense: {diag.forensic_explanation}")
     console.print(f" • Solución Óptima de Mínimos Cuadrados (L2 Projection): [green]{diag.optimal_pseudo_solution}[/green]")
     for eq in diag.unresolvable_equations:
-        console.print(f"   ✖ {eq}")
+        console.print(f"   [FAIL] {eq}")
     
     assert not diag.is_solvable
     assert diag.problem_type == "INCOMPATIBLE_CONTRADICTORIO"
@@ -55,7 +55,7 @@ def test_overconstrained_unsolvable_system():
 
 
 def test_singular_matrix_indeterminacy():
-    console.print("\n[bold yellow]🧪 PRUEBA 2: MATRIZ SINGULAR EN DESAGREGACIÓN DE BUNDLES (INFINITAS SOLUCIONES)[/bold yellow]")
+    console.print("\n[bold yellow][TEST] PRUEBA 2: MATRIZ SINGULAR EN DESAGREGACIÓN DE BUNDLES (INFINITAS SOLUCIONES)[/bold yellow]")
     
     # Paquetes opacos con dependencia lineal exacta (det = 0):
     # Lote 1: 2 Licencias A + 4 Licencias B = 600€
@@ -79,7 +79,7 @@ def test_singular_matrix_indeterminacy():
 
 
 def test_circular_rebate_paradox():
-    console.print("\n[bold yellow]🧪 PRUEBA 3: PARADOJA DE DESCUENTO CIRCULAR SIN PUNTO FIJO[/bold yellow]")
+    console.print("\n[bold yellow][TEST] PRUEBA 3: PARADOJA DE DESCUENTO CIRCULAR SIN PUNTO FIJO[/bold yellow]")
     
     # T = Subtotal - Rebate
     # Rebate = -1.0 * T + 50 (autovalor 1.0 -> T = Subtotal + T - 50 => 0 = Subtotal - 50, imposible si Subtotal=100)
@@ -99,7 +99,7 @@ def test_circular_rebate_paradox():
 
 
 async def test_reasoner_with_contradictory_invoice():
-    console.print("\n[bold yellow]🧪 PRUEBA 4: MOTOR DE RAZONAMIENTO ANTE TEXTO FORENSE CONTRADICTORIO[/bold yellow]")
+    console.print("\n[bold yellow][TEST] PRUEBA 4: MOTOR DE RAZONAMIENTO ANTE TEXTO FORENSE CONTRADICTORIO[/bold yellow]")
     
     contradictory_text = (
         "FACTURA INCOMPATIBLE #CONTRADICCIÓN-01\n"
@@ -124,7 +124,7 @@ async def test_reasoner_with_contradictory_invoice():
 
 
 def test_sqlite_persistence():
-    console.print("\n[bold yellow]🧪 PRUEBA 5: PERSISTENCIA TRANSACCIONAL EN SQLITE (RECUPERACIÓN TRAS REINICIO)[/bold yellow]")
+    console.print("\n[bold yellow][TEST] PRUEBA 5: PERSISTENCIA TRANSACCIONAL EN SQLITE (RECUPERACIÓN TRAS REINICIO)[/bold yellow]")
     
     jm = AsyncJobManager(db_path="ai_engine/data/test_jobs.sqlite")
     job_id = jm.submit_job([("Factura 1", "f1.txt"), ("Factura 2", "f2.txt")], use_llm=False)
@@ -135,7 +135,7 @@ def test_sqlite_persistence():
     
     assert recovered_job is not None
     assert recovered_job.job_id == job_id
-    console.print(f"✔ Trabajo [cyan]{job_id}[/cyan] recuperado exitosamente del disco SQLite con estado: [bold green]{recovered_job.status}[/bold green]")
+    console.print(f"[PASS] Trabajo [cyan]{job_id}[/cyan] recuperado exitosamente del disco SQLite con estado: [bold green]{recovered_job.status}[/bold green]")
 
 
 def main():
@@ -154,7 +154,7 @@ def main():
     asyncio.run(test_reasoner_with_contradictory_invoice())
     test_sqlite_persistence()
 
-    console.print("\n[bold green]🎯 TODAS LAS PRUEBAS MATEMÁTICAS Y DE PERSISTENCIA FUERON SUPERADAS CON ÉXITO.[/bold green]\n")
+    console.print("\n[bold green][SUCCESS] TODAS LAS PRUEBAS MATEMÁTICAS Y DE PERSISTENCIA FUERON SUPERADAS CON ÉXITO.[/bold green]\n")
 
 
 if __name__ == "__main__":

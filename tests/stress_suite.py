@@ -37,7 +37,7 @@ def generate_mock_invoice_text(idx: int, supplier_name: str = "Test Supplier S.L
 
 
 async def test_bulk_volume(num_invoices: int = 500):
-    console.print(f"\n[bold yellow]⚡ FASE 1: TEST DE GRAN VOLUMEN (LOTE DE {num_invoices} DOCUMENTOS)[/bold yellow]")
+    console.print(f"\n[bold yellow][STAGE] FASE 1: TEST DE GRAN VOLUMEN (LOTE DE {num_invoices} DOCUMENTOS)[/bold yellow]")
     
     docs = [
         {"raw_text": generate_mock_invoice_text(i), "filename": f"inv_{i}.txt"}
@@ -58,14 +58,14 @@ async def test_bulk_volume(num_invoices: int = 500):
     if resp.status_code == 200:
         data = resp.json()
         docs_per_sec = round(num_invoices / (elapsed / 1000), 2)
-        console.print(f"[bold green]✔ ÉXITO:[/bold green] {data['total_documents']} documentos procesados y agregados.")
+        console.print(f"[bold green][PASS] ÉXITO:[/bold green] {data['total_documents']} documentos procesados y agregados.")
         console.print(f"  • Tiempo total: [cyan]{round(elapsed, 2)} ms[/cyan]")
         console.print(f"  • Throughput: [green]{docs_per_sec} docs/segundo[/green]")
         console.print(f"  • Volumen financiero calculado: [bold]{data['total_volume_amount']} €[/bold]")
         console.print(f"  • Paridad contable: [bold]{data['balanced_percentage']}%[/bold]")
         return True, elapsed, docs_per_sec
     else:
-        console.print(f"[bold red]✘ FALLO (HTTP {resp.status_code}):[/bold red] {resp.text}")
+        console.print(f"[bold red][ERROR] FALLO (HTTP {resp.status_code}):[/bold red] {resp.text}")
         return False, elapsed, 0
 
 
@@ -91,9 +91,9 @@ async def simulate_virtual_user(client: httpx.AsyncClient, user_id: int, num_req
 
 
 async def test_stepped_concurrency(vu_stages: List[int] = [10, 25, 50, 100]):
-    console.print(f"\n[bold yellow]⚡ FASE 2: TEST DE CONCURRENCIA ESCALONADA (VUs: {vu_stages})[/bold yellow]")
+    console.print(f"\n[bold yellow][STAGE] FASE 2: TEST DE CONCURRENCIA ESCALONADA (VUs: {vu_stages})[/bold yellow]")
     
-    results_table = Table(title="📈 Métricas de Concurrencia y Percentiles de Latencia")
+    results_table = Table(title="[METRICS] Métricas de Concurrencia y Percentiles de Latencia")
     results_table.add_column("VUs", style="cyan")
     results_table.add_column("Peticiones", style="white")
     results_table.add_column("p50 (ms)", style="green")
@@ -137,7 +137,7 @@ async def test_stepped_concurrency(vu_stages: List[int] = [10, 25, 50, 100]):
 
 
 async def test_defensive_fuzzing():
-    console.print(f"\n[bold yellow]⚡ FASE 3: AUDITORÍA DEFENSIVA Y FUZZING (OWASP / ROBUSTEZ)[/bold yellow]")
+    console.print(f"\n[bold yellow][STAGE] FASE 3: AUDITORÍA DEFENSIVA Y FUZZING (OWASP / ROBUSTEZ)[/bold yellow]")
     
     fuzz_cases = [
         ("JSON Truncado / Malformado", '{"documents": [{"raw_text": "incompleto"', "raw"),
@@ -148,7 +148,7 @@ async def test_defensive_fuzzing():
         ("Documento con caracteres nulos / binario", '{"raw_text": "\x00\x00\x01\x02\xFF\xFE\x00\x00Corrupted Binary Stream", "document_name": "corrupt.bin", "use_llm": false}', "decompose")
     ]
 
-    table = Table(title="🛡️ Resultados de Seguridad y Fuzzing")
+    table = Table(title="[AUDIT] Resultados de Seguridad y Fuzzing")
     table.add_column("Prueba", style="cyan")
     table.add_column("Payload Enviado", style="white")
     table.add_column("HTTP Status", style="yellow")

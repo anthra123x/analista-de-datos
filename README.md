@@ -1,4 +1,4 @@
-# ⚡ Analista de Datos (`analista-de-datos`)
+# Analista de Datos (`analista-de-datos`)
 
 > **Motor Neuro-Simbólico de Razonamiento Cognitivo, Auditoría Forense y Descomposición Financiera de Alto Volumen.**  
 > *Diseñado para operar como biblioteca Python, CLI de terminal o microservicio API REST de nivel empresarial.*
@@ -12,7 +12,7 @@
 
 ---
 
-## 🚀 ¿Por qué Analista de Datos?
+## 1. Fundamentos y Ventajas Arquitectónicas
 
 Los LLMs autorregresivos convencionales (*GPT-4o, Claude 3.5, Gemini*) alucinan sumas decimales en un **13% - 25%** de los casos, saturan su ventana de contexto con tablas grandes y son incapaces de auditar distribuciones estadísticas masivas o sistemas matemáticos insolubles.
 
@@ -29,7 +29,7 @@ Los LLMs autorregresivos convencionales (*GPT-4o, Claude 3.5, Gemini*) alucinan 
 
 ---
 
-## 📊 Benchmark Comparativo (2.500 Documentos Complejos)
+## 2. Benchmark Comparativo (2.500 Documentos Complejos)
 
 | Métrica | Pure LLM (GPT-4o) | Frontier CoT (DeepSeek-R1) | **Analista de Datos (Ours)** |
 | :--- | :--- | :--- | :--- |
@@ -45,7 +45,7 @@ Los LLMs autorregresivos convencionales (*GPT-4o, Claude 3.5, Gemini*) alucinan 
 
 ---
 
-## 📦 Instalación
+## 3. Instalación
 
 ### Opción 1: Vía Git / Pip
 ```bash
@@ -61,9 +61,9 @@ uv pip install -e .
 
 ---
 
-## 🛠️ Guía Rápida de Uso
+## 4. Guía de Uso e Integración
 
-### 1. Como Biblioteca en Python (SDK)
+### 4.1. Como Biblioteca en Python (SDK)
 
 ```python
 from analista_de_datos import AnalistaDeDatos
@@ -94,14 +94,14 @@ print(f"Fecha Normalizada: {doc.temporal_analysis['normalized_invoice_date']}")
 
 # Asiento Contable PGC
 if doc.journal_entry:
-    print("\n--- Asiento Contable Generado ---")
+    print("\n[Asiento Contable Generado]")
     for linea in doc.journal_entry.lines:
         print(f"  [{linea.account_code}] {linea.account_name} | Debe: {linea.debit}€ | Haber: {linea.credit}€")
 ```
 
 ---
 
-### 2. Conciliación Bancaria Automática
+### 4.2. Conciliación Bancaria Automática
 
 ```python
 from analista_de_datos import AnalistaDeDatos
@@ -124,7 +124,7 @@ print(f"Movimientos Huérfanos: {len(reconciliacion.unreconciled_movements)}")
 
 ---
 
-### 3. Como Herramienta de Línea de Comandos (CLI)
+### 4.3. Como Herramienta de Línea de Comandos (CLI)
 
 ```bash
 # 1. Analizar un documento o factura individual
@@ -148,7 +148,7 @@ analista serve --host 0.0.0.0 --port 8100
 
 ---
 
-### 4. Vía Docker / Docker Compose
+### 4.4. Vía Docker / Docker Compose
 
 ```bash
 # Levantar el microservicio API
@@ -160,7 +160,7 @@ curl http://localhost:8100/health
 
 ---
 
-### 5. API REST Endpoints (OpenAPI / Swagger)
+### 4.5. API REST Endpoints (OpenAPI / Swagger)
 
 Al ejecutar `analista serve`, la documentación interactiva Swagger UI estará disponible en `http://localhost:8100/docs`.
 
@@ -191,7 +191,7 @@ Encola hasta 50.000+ documentos para procesamiento asíncrono desacoplado con te
 
 ---
 
-## 🧪 Pruebas y Validación
+## 5. Pruebas y Validación
 
 El proyecto incluye suites completas de pruebas unitarias, de integración, de estrés y de benchmarks:
 
@@ -214,7 +214,7 @@ python -m tests.advanced_stress_suite
 
 ---
 
-## 🏛️ Licencia
+## 6. Licencia
 
 Distribuido bajo la Licencia **MIT**. Consulta [LICENSE](LICENSE) para más información.
 Desarrollado con arquitectura neuro-simbólica para entornos corporativos y analítica de datos a gran escala.

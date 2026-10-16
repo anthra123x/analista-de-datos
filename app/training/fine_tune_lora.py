@@ -15,9 +15,9 @@ def train_reasoning_model(
     batch_size: int = 2,
     epochs: int = 3
 ):
-    print(f"🚀 Iniciando preparación de Fine-Tuning para: {model_name}")
-    print(f"📁 Dataset: {dataset_path}")
-    print(f"💾 Directorio de salida: {output_dir}")
+    print(f"[START] Iniciando preparación de Fine-Tuning para: {model_name}")
+    print(f"[DIR] Dataset: {dataset_path}")
+    print(f"[SAVE] Directorio de salida: {output_dir}")
 
     try:
         from unsloth import FastLanguageModel
@@ -26,7 +26,7 @@ def train_reasoning_model(
         from transformers import TrainingArguments
         from datasets import load_dataset
     except ImportError:
-        print("\n⚠️  [Aviso de Dependencias de Entrenamiento]:")
+        print("\n[AVISO] Dependencias de Entrenamiento:")
         print("Para ejecutar el fine-tuning en GPU, instala las librerías de entrenamiento:")
         print("pip install torch transformers datasets trl peft unsloth accelerate")
         print("\nEl pipeline de datos y el dataset JSONL ya están completamente listos y validados.")
@@ -83,10 +83,10 @@ def train_reasoning_model(
         ),
     )
 
-    print("⚡ Comenzando entrenamiento de tensores...")
+    print("[EXEC] Comenzando entrenamiento de tensores...")
     trainer.train()
 
-    print(f"✅ Entrenamiento completado. Guardando adaptadores LoRA en {output_dir}")
+    print(f"[OK] Entrenamiento completado. Guardando adaptadores LoRA en {output_dir}")
     model.save_pretrained(output_dir)
     tokenizer.save_pretrained(output_dir)
 

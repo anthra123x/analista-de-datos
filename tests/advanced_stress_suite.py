@@ -158,9 +158,9 @@ def generate_complex_heterogeneous_invoice(idx: int, inject_benford_anomaly: boo
 
 
 async def test_async_queue_with_sse(num_documents: int = 5000):
-    console.print(f"\n[bold yellow]⚡ ETAPA 1: SATURACIÓN MASIVA CON COLA ASÍNCRONA ({num_documents} FACTURAS HETEROGÉNEAS)[/bold yellow]")
+    console.print(f"\n[bold yellow][STAGE] ETAPA 1: SATURACIÓN MASIVA CON COLA ASÍNCRONA ({num_documents} FACTURAS HETEROGÉNEAS)[/bold yellow]")
     
-    console.print(f"📦 Generando {num_documents} facturas complejas (distribución log-normal, rectificativas, suministros, IVA mixto)...")
+    console.print(f"[INFO] Generando {num_documents} facturas complejas (distribución log-normal, rectificativas, suministros, IVA mixto)...")
     t_gen0 = time.perf_counter()
     docs = []
     
@@ -171,7 +171,7 @@ async def test_async_queue_with_sse(num_documents: int = 5000):
         docs.append({"raw_text": text, "filename": fname})
 
     t_gen = (time.perf_counter() - t_gen0) * 1000
-    console.print(f"✔ Generación completada en [cyan]{round(t_gen, 2)} ms[/cyan]")
+    console.print(f"[PASS] Generación completada en [cyan]{round(t_gen, 2)} ms[/cyan]")
 
     # 1. Enviar a la cola asíncrona
     t_submit0 = time.perf_counter()
@@ -188,10 +188,10 @@ async def test_async_queue_with_sse(num_documents: int = 5000):
 
         submit_data = submit_resp.json()
         job_id = submit_data["job_id"]
-        console.print(f"[bold green]✔ Trabajo encolado con éxito:[/bold green] ID=[cyan]{job_id}[/cyan]")
+        console.print(f"[bold green][PASS] Trabajo encolado con éxito:[/bold green] ID=[cyan]{job_id}[/cyan]")
 
         # 2. Conectar al stream SSE y monitorizar el progreso en tiempo real
-        console.print(f"📡 Escuchando telemetría en streaming SSE de [cyan]/api/v1/jobs/{job_id}/stream[/cyan]...")
+        console.print(f"[STREAM] Escuchando telemetría en streaming SSE de [cyan]/api/v1/jobs/{job_id}/stream[/cyan]...")
         
         last_pct = 0.0
         t_start_stream = time.perf_counter()
@@ -215,14 +215,14 @@ async def test_async_queue_with_sse(num_documents: int = 5000):
                         if status == "COMPLETED":
                             break
                         if status == "FAILED":
-                            console.print(f"[bold red]✘ Fallo en trabajo:[/bold red] {evt.get('error_message')}")
+                            console.print(f"[bold red][ERROR] Fallo en trabajo:[/bold red] {evt.get('error_message')}")
                             return False
                     except Exception:
                         pass
 
         total_exec_time = (time.perf_counter() - t_start_stream) * 1000
         throughput = round(num_documents / (total_exec_time / 1000), 2)
-        console.print(f"\n[bold green]🎉 TRABAJO ASÍNCRONO COMPLETADO CON ÉXITO[/bold green]")
+        console.print(f"\n[bold green][SUCCESS] TRABAJO ASÍNCRONO COMPLETADO CON ÉXITO[/bold green]")
         console.print(f"  • Tiempo total de cómputo en cola: [cyan]{round(total_exec_time, 2)} ms[/cyan]")
         console.print(f"  • Throughput streaming sostenido: [bold green]{throughput} docs/segundo[/bold green]")
 
@@ -231,7 +231,7 @@ async def test_async_queue_with_sse(num_documents: int = 5000):
         res_data = final_resp.json().get("result", {})
 
         # Tabla resumen financiero del lote masivo
-        metrics_table = Table(title=f"📊 Análisis Financiero del Lote Masivo ({num_documents} Facturas Complejas)")
+        metrics_table = Table(title=f"[METRICS] Análisis Financiero del Lote Masivo ({num_documents} Facturas Complejas)")
         metrics_table.add_column("Métrica", style="cyan")
         metrics_table.add_column("Valor Computado", style="green")
 
@@ -245,7 +245,7 @@ async def test_async_queue_with_sse(num_documents: int = 5000):
 
         # Mostrar desglose por Centros de Coste detectados
         if res_data.get("cost_center_breakdown"):
-            cc_table = Table(title="🏢 Centros de Coste (Clasificación PGC Multitramo)")
+            cc_table = Table(title="[COST_CENTERS] Centros de Coste (Clasificación PGC Multitramo)")
             cc_table.add_column("Centro de Coste", style="yellow")
             cc_table.add_column("Gasto Total (€)", style="green")
             cc_table.add_column("Líneas Contabilizadas", style="white")
@@ -255,7 +255,7 @@ async def test_async_queue_with_sse(num_documents: int = 5000):
 
         # Mostrar desglose por Tipos de IVA
         if res_data.get("tax_rate_breakdown"):
-            vat_table = Table(title="📑 Desglose por Tramo Fiscal de IVA")
+            vat_table = Table(title="[TAX_BREAKDOWN] Desglose por Tramo Fiscal de IVA")
             vat_table.add_column("Tipo Impositivo", style="cyan")
             vat_table.add_column("Base Imponible (€)", style="white")
             vat_table.add_column("Cuota IVA (€)", style="green")
@@ -271,7 +271,7 @@ async def test_async_queue_with_sse(num_documents: int = 5000):
 
         # Mostrar anomalías forenses detectadas (incluyendo Ley de Benford)
         anomalies = res_data.get("anomalies", [])
-        console.print(f"\n[bold yellow]🛡️ Auditoría Forense y Detección de Anomalías ({len(anomalies)} detectadas):[/bold yellow]")
+        console.print(f"\n[bold yellow][AUDIT] Auditoría Forense y Detección de Anomalías ({len(anomalies)} detectadas):[/bold yellow]")
         benford_found = False
         for an in anomalies[:8]:
             if "BENFORD" in an.get("anomaly_type", ""):
@@ -284,7 +284,7 @@ async def test_async_queue_with_sse(num_documents: int = 5000):
             console.print(f"   ... y {len(anomalies) - 8} anomalías más registradas en el reporte forense.")
 
         if benford_found:
-            console.print("\n[bold green]✔ PRUEBA FORENSE SUPERADA:[/bold green] El detector de la Ley de Benford identificó correctamente la inyección artificial de importes manipulados.")
+            console.print("\n[bold green][PASS] PRUEBA FORENSE SUPERADA:[/bold green] El detector de la Ley de Benford identificó correctamente la inyección artificial de importes manipulados.")
 
         return True
 

@@ -48,15 +48,15 @@ def analyze(
         return
 
     console.print(Panel(
-        f"📄 [bold cyan]Factura:[/bold cyan] {result.invoice_number} | [bold cyan]Fecha:[/bold cyan] {result.invoice_date}\n"
-        f"🏢 [bold cyan]Proveedor:[/bold cyan] {result.supplier_name} ({result.supplier_tax_id})\n"
-        f"💰 [bold green]Total:[/bold green] {result.grand_total} {result.currency} | [bold]Base:[/bold] {result.subtotal} {result.currency} | [bold]IVA:[/bold] {result.tax_total} {result.currency}\n"
-        f"⚖️  [bold]Partida Doble:[/bold] {'[green]BALANCEADA[/green]' if result.is_balanced else '[red]DESCUADRADA[/red]'}",
+        f"[bold cyan]Factura:[/bold cyan] {result.invoice_number} | [bold cyan]Fecha:[/bold cyan] {result.invoice_date}\n"
+        f"[bold cyan]Proveedor:[/bold cyan] {result.supplier_name} ({result.supplier_tax_id})\n"
+        f"[bold green]Total:[/bold green] {result.grand_total} {result.currency} | [bold]Base:[/bold] {result.subtotal} {result.currency} | [bold]IVA:[/bold] {result.tax_total} {result.currency}\n"
+        f"[bold]Partida Doble:[/bold] {'[green]BALANCEADA[/green]' if result.is_balanced else '[red]DESCUADRADA[/red]'}",
         title="Resultado del Análisis"
     ))
 
     # Tabla de partidas
-    table = Table(title="📑 Partidas Descompuestas")
+    table = Table(title="Partidas Descompuestas")
     table.add_column("#", style="dim", width=4)
     table.add_column("Concepto", style="white")
     table.add_column("Cant.", justify="right")
@@ -80,7 +80,7 @@ def analyze(
     # Asiento contable si existe
     if result.journal_entry:
         je = result.journal_entry
-        je_table = Table(title=f"🏛️ Asiento Contable PGC ({'Cuadrado' if je.is_balanced else 'Descuadrado'})")
+        je_table = Table(title=f"Asiento Contable PGC ({'Cuadrado' if je.is_balanced else 'Descuadrado'})")
         je_table.add_column("Cuenta", style="yellow")
         je_table.add_column("Nombre de Subcuenta", style="white")
         je_table.add_column("Debe (€)", style="green", justify="right")
@@ -109,7 +109,7 @@ def batch(
         console.print(f"[yellow]Aviso:[/yellow] No se encontraron archivos en {path}.")
         return
 
-    console.print(Panel(f"🚀 Procesando {len(files)} documentos en lote...", title="Analista de Datos"))
+    console.print(Panel(f"Procesando {len(files)} documentos en lote...", title="Analista de Datos"))
 
     documents = []
     for f in files:
@@ -122,7 +122,7 @@ def batch(
     result = asyncio.run(run())
 
     # Mostrar tabla resumen
-    table = Table(title="📊 Resumen Forense de Lote (DuckDB + Polars)")
+    table = Table(title="Resumen Forense de Lote (DuckDB + Polars)")
     table.add_column("Métrica", style="cyan")
     table.add_column("Valor Computado", style="green")
 
@@ -137,7 +137,7 @@ def batch(
     if output:
         out_p = Path(output).resolve()
         out_p.write_text(result.model_dump_json(indent=2), encoding="utf-8")
-        console.print(f"[bold green]✔ Reporte guardado en:[/bold green] {out_p}")
+        console.print(f"[bold green][OK] Reporte guardado en:[/bold green] {out_p}")
 
 
 @app.command()
@@ -147,9 +147,9 @@ def validate_tax_id(tax_id: str = typer.Argument(..., help="DNI, NIE, CIF o VIES
     """
     res = FiscalTaxIdValidator.validate_tax_id(tax_id)
     if res.is_valid:
-        console.print(f"[bold green]✔ VÁLIDO:[/bold green] {res.diagnostic_message} (Entidad: {res.entity_type})")
+        console.print(f"[bold green][VALIDO][/bold green] {res.diagnostic_message} (Entidad: {res.entity_type})")
     else:
-        console.print(f"[bold red]✘ INVÁLIDO:[/bold red] {res.diagnostic_message}")
+        console.print(f"[bold red][INVALIDO][/bold red] {res.diagnostic_message}")
 
 
 @app.command()
@@ -162,8 +162,8 @@ def serve(
     Inicia el servidor de API REST con FastAPI y endpoints OpenAPI.
     """
     import uvicorn
-    console.print(f"[bold green]🚀 Iniciando Analista de Datos API en http://{host}:{port}[/bold green]")
-    console.print(f"📖 Documentación Swagger UI disponible en: [cyan]http://{host}:{port}/docs[/cyan]")
+    console.print(f"[bold green]Iniciando Analista de Datos API en http://{host}:{port}[/bold green]")
+    console.print(f"Documentación Swagger UI disponible en: [cyan]http://{host}:{port}/docs[/cyan]")
     uvicorn.run("app.main:app", host=host, port=port, reload=reload)
 
 
@@ -175,9 +175,9 @@ def generate_dataset(
     """
     Genera dataset sintético en formato ChatML con trazas de pensamiento <think> para fine-tuning.
     """
-    console.print(f"📦 Generando {count} muestras de entrenamiento...")
+    console.print(f"Generando {count} muestras de entrenamiento...")
     file_path = DatasetGenerator.export_dataset(count=count, output_file=output)
-    console.print(f"[bold green]✅ Dataset generado con éxito:[/bold green] {file_path}")
+    console.print(f"[bold green][OK] Dataset generado con éxito:[/bold green] {file_path}")
 
 
 if __name__ == "__main__":
