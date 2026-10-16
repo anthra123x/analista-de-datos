@@ -337,13 +337,24 @@ class SplitReasoner:
     @classmethod
     def _algorithmic_reasoning(cls, raw_text: str, filename: str) -> Tuple[Dict[str, Any], str]:
         """
-        Motor de razonamiento sintético determinista.
-        Genera una traza de pensamiento transparente y extrae campos clave.
+        Motor de razonamiento sintético determinista universal.
+        Genera una traza de pensamiento transparente y extrae campos clave de cualquier modelo y formato.
         """
+        # 0. Si el documento ya es un JSON estructurado
+        json_match = re.search(r"\{[\s\S]*\}", raw_text)
+        if json_match:
+            try:
+                candidate = json.loads(json_match.group(0))
+                if isinstance(candidate, dict) and any(k in candidate for k in ["invoice_number", "grand_total", "items", "total", "subtotal"]):
+                    trace = "<think>\n1. [JSON Nativo]: Estructura de datos JSON detectada e hidratada directamente sin pérdida de fidelidad.\n</think>"
+                    return candidate, trace
+            except Exception:
+                pass
+
         lines = [ln.strip() for ln in raw_text.splitlines() if ln.strip()]
         thinking_steps = [
             f"<think>",
-            f"1. [Auditoría Léxica]: Analizando archivo '{filename}' con {len(lines)} líneas de texto estructurado.",
+            f"1. [Auditoría Léxica]: Analizando documento '{filename}' con {len(lines)} líneas de texto estructurado.",
         ]
 
         # 1. Moneda
@@ -352,27 +363,71 @@ class SplitReasoner:
             currency = "USD"
         elif "£" in raw_text or "GBP" in raw_text:
             currency = "GBP"
+        elif "¥" in raw_text or "JPY" in raw_text:
+            currency = "JPY"
+        elif "CHF" in raw_text:
+            currency = "CHF"
         thinking_steps.append(f"2. [Divisa]: Detectado símbolo o código de moneda -> {currency}.")
 
         # 2. Número de factura
-        inv_match = re.search(r"(?:factura|invoice|ticket|n[ºo])\s*[:#]?\s*([A-Za-z0-9\-_/]{3,30})", raw_text, re.I)
-        invoice_num = inv_match.group(1) if inv_match else f"FAC-{filename[:6].upper()}"
+        inv_match = re.search(
+            r'(?:(?:n[úu]mero|n[ºo]|c[oó]digo)\s+(?:de\s+)?(?:factura|ticket|abono|recibo|invoice)|(?:factura|ticket|invoice|fra|abono)\s*(?:n[ºo]|n[úu]mero|#)|n[ºo]\s*[:#]|invoice\s*(?:#|no\.?|number))\s*[:#]?\s*([A-Za-z0-9\-_/]{3,30})',
+            raw_text,
+            re.I
+        )
+        invoice_num = inv_match.group(1) if inv_match else ""
+        if not invoice_num:
+            code_match = re.search(r"\b([A-Z0-9]{2,8}[-_/]\d{3,8}(?:[-_/]\d+)?)\b", raw_text)
+            invoice_num = code_match.group(1) if code_match else f"FAC-{filename[:6].upper()}"
         thinking_steps.append(f"3. [Identificador]: Nº de factura extraído -> {invoice_num}.")
 
         # 3. NIFs / CIFs
-        tax_ids = re.findall(r"\b([0-9]{8}[A-Za-z]|[XYZxyz][0-9]{7}[A-Za-z]|[A-HJ-NP-SUVWa-hj-np-suvw][0-9]{7}[0-9A-Ja-j]|ES[A-Z0-9]{8,9})\b", raw_text)
+        tax_ids = re.findall(r"\b([0-9]{8}[A-Za-z]|[XYZxyz][0-9]{7}[A-Za-z]|[A-HJ-NP-SUVWa-hj-np-suvw][0-9]{7}[0-9A-Ja-j]|ES[A-Z0-9]{8,9}|LU\d{8}|US\d{8,9})\b", raw_text)
         supplier_tax_id = tax_ids[0] if tax_ids else "B87219034"
         thinking_steps.append(f"4. [NIF/CIF]: Emisor identificado con identificador fiscal -> {supplier_tax_id}.")
 
-        # 4. Proveedor
-        supplier_name = "Proveedor General S.L."
-        for line in lines[:6]:
-            if any(term in line.lower() for term in ["s.l.", "s.a.", "s.a.u.", "slu", "inc", "corp", "tech", "cloud", "telecom"]):
-                supplier_name = line
-                break
+        # 4. Proveedor / Razón Social
+        corporate_regex = re.compile(r'\b(?:s\.?l\.?u?|s\.?a\.?u?|slu|inc\.?|corp\.?|sarl|gmbh|llc|ltd\.?|limited)\b', re.I)
+        supplier_name = ""
+
+        # Búsqueda de campo explícito Proveedor: ...
+        supp_explicit = re.search(r'(?:proveedor|emisor|empresa|raz[oó]n\s+social|vendor)\s*[:]\s*([^\n\r|]{3,60})', raw_text, re.I)
+        if supp_explicit:
+            clean_s = re.sub(r'\(.*?\)', '', supp_explicit.group(1)).strip()
+            if len(clean_s) > 2:
+                supplier_name = clean_s
+
+        # Búsqueda por marcador societario
+        if not supplier_name:
+            for line in lines[:8]:
+                if corporate_regex.search(line):
+                    if "|" in line:
+                        cols = [c.strip() for c in line.split("|")]
+                        found_col = next((c for c in cols if corporate_regex.search(c)), None)
+                        if found_col:
+                            supplier_name = found_col
+                            break
+                    supplier_name = line
+                    break
+
+        # Búsqueda por primera línea nominal válida (para profesionales autónomos)
+        if not supplier_name:
+            for line in lines[:6]:
+                if not re.search(r'^(?:calle|avda|av\.|plaza|c/|p[ºo]|nif|cif|nie|vat|tel|email|factura|invoice|ticket|recibo|albar[aá]n|documento)\b', line, re.I):
+                    supplier_name = line
+                    break
+
+        if not supplier_name:
+            supplier_name = "Proveedor General S.L."
+
         thinking_steps.append(f"5. [Emisor]: Razón social localizada -> '{supplier_name}'.")
 
-        # 5. Importes y Partidas
+        # 5. Detección de Cuenta Bancaria / IBAN
+        iban_match = re.search(r"\b([A-Z]{2}\d{2}[ \-]?(?:\d{4}[ \-]?){4}\d{2,4})\b", raw_text)
+        if iban_match:
+            thinking_steps.append(f"6. [Cuenta Bancaria]: IBAN de liquidación localizado -> {iban_match.group(1)}.")
+
+        # 6. Importes y Partidas
         grand_total = 0.0
         subtotal = 0.0
         tax_total = 0.0
@@ -388,7 +443,7 @@ class SplitReasoner:
             is_summary = any(k in lower for k in [
                 "total factura", "importe total", "total a pagar", "total:",
                 "base imponible", "subtotal", "cuota iva", "total iva", "iva total", "retención", "retencion", "irpf"
-            ]) and not ("|" in line or " x " in line or "ref-" in line)
+            ]) and not (" x " in line or "ref-" in line)
 
             if is_summary:
                 if any(k in lower for k in ["total factura", "importe total", "total a pagar", "total:"]) and amounts:
@@ -418,13 +473,24 @@ class SplitReasoner:
                     b_amt = amounts[0]
 
                 t_amt = round(b_amt * (tax_rate / 100.0), 2)
-                # Extraer concepto preservando nombres y modelos como EC2, S3, etc.
-                raw_concept = line.split("|")[0].strip()
-                m_concept = re.match(r"^(.*?)(?:\s{2,}|\t|\s+(?=\d+\s+))\d+.*$", raw_concept)
-                if m_concept and len(m_concept.group(1).strip()) > 3:
-                    concept = m_concept.group(1).strip()
+
+                # Extraer concepto limpio
+                if "|" in line:
+                    cols = [c.strip() for c in line.split("|") if c.strip()]
+                    non_num_cols = [c for c in cols if not re.match(r"^[\d.,€$£%\s/:\-]+$", c) and len(c) > 2 and not any(k in c.lower() for k in ["factura", "csv-", "nif"])]
+                    if len(non_num_cols) >= 2:
+                        concept = non_num_cols[-1]
+                    elif len(non_num_cols) == 1:
+                        concept = non_num_cols[0]
+                    else:
+                        concept = cols[0]
                 else:
-                    concept = re.sub(r"\s+[\d.,€$£]+(?:\s+[\d.,€$£]+)*\s*$", "", raw_concept).strip() or "Partida de Servicio"
+                    raw_concept = line.split("|")[0].strip()
+                    m_concept = re.match(r"^(.*?)(?:\s{2,}|\t|\s+(?=\d+\s+))\d+.*$", raw_concept)
+                    if m_concept and len(m_concept.group(1).strip()) > 3:
+                        concept = m_concept.group(1).strip()
+                    else:
+                        concept = re.sub(r"\s+[\d.,€$£]+(?:\s+[\d.,€$£]+)*\s*$", "", raw_concept).strip() or "Partida de Servicio"
 
                 items.append({
                     "concept": concept,
